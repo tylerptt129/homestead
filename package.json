@@ -1,0 +1,37 @@
+{
+  "name": "homestead-forge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plan your land. Build your life. Track every step.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "mobile": "yarn workspace @homestead/mobile start",
+    "mobile:ios": "yarn workspace @homestead/mobile ios",
+    "mobile:android": "yarn workspace @homestead/mobile android",
+    "mobile:web": "yarn workspace @homestead/mobile web",
+    "web": "yarn workspace @homestead/web dev",
+    "lint": "eslint . --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+  },
+  "devDependencies": {
+    "@types/react": "~18.2.79",
+    "@types/react-native": "~0.73.0",
+    "eslint": "^8.57.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.2.5",
+    "typescript": "~5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "packageManager": "yarn@4.1.0",
+  "dependencies": {
+    "react": "^18.3.1",
+    "zustand": "^5.0.12"
+  }
+}
