@@ -8,6 +8,9 @@ import Badge from '../../components/atoms/Badge';
 import Icon from '../../components/atoms/Icon';
 import Card from '../../components/atoms/Card';
 import StepItem from '../../components/molecules/StepItem';
+import PhotoGallery from '../../components/molecules/PhotoGallery';
+import LocationTip from '../../components/molecules/LocationTip';
+import { useAuthStore } from '../../stores/useAuthStore';
 
 export default function ModuleDetailScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -17,6 +20,9 @@ export default function ModuleDetailScreen() {
   const steps = useModuleStore(s => s.steps);
   const progress = useProgressStore(s => s.progress);
   const updateStatus = useProgressStore(s => s.updateStepStatus);
+  const addPhoto = useProgressStore(s => s.addStepPhoto);
+  const removePhoto = useProgressStore(s => s.removeStepPhoto);
+  const profile = useAuthStore(s => s.profile);
 
   const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
   const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
@@ -29,19 +35,40 @@ export default function ModuleDetailScreen() {
     const total = modSteps.length;
     const completed = modSteps.filter(s => progress[s.id]?.status === 'completed').length;
     const inProg = modSteps.filter(s => progress[s.id]?.status === 'in_progress').length;
-    return { total, completed, inProg, pct: total > 0 ? completed / total : 0 };
+    const skipped = modSteps.filter(s => progress[s.id]?.status === 'skipped').length;
+    return { total, completed, inProg, skipped, pct: total > 0 ? completed / total : 0 };
   }, [modSteps, progress]);
 
   const completedIds = useMemo(() => {
     const set = new Set<string>();
-    modSteps.forEach(s => { if (progress[s.id]?.status === 'completed') set.add(s.id); });
+    modSteps.forEach(s => {
+      if (progress[s.id]?.status === 'completed') set.add(s.id);
+    });
     return set;
   }, [modSteps, progress]);
+
+  // Collect all photos across all steps in this module
+  const modulePhotos = useMemo(() => {
+    const allPhotos: { stepId: string; uri: string }[] = [];
+    modSteps.forEach(s => {
+      const p = progress[s.id];
+      if (p?.photos?.length) {
+        p.photos.forEach(uri => allPhotos.push({ stepId: s.id, uri }));
+      }
+    });
+    return allPhotos;
+  }, [modSteps, progress]);
+
+  // For the module gallery, add to first step by default
+  const defaultStepId = modSteps[0]?.id || '';
 
   const costStats = useMemo(() => {
     const estLow = modSteps.reduce((s, step) => s + step.estimatedCostLow, 0);
     const estHigh = modSteps.reduce((s, step) => s + step.estimatedCostHigh, 0);
-    const actual = modSteps.reduce((s, step) => s + (progress[step.id]?.actualCost || 0), 0);
+    const actual = modSteps.reduce((s, step) => {
+      const p = progress[step.id];
+      return s + (p?.actualCost || 0);
+    }, 0);
     return { estLow, estHigh, actual };
   }, [modSteps, progress]);
 
@@ -58,11 +85,13 @@ export default function ModuleDetailScreen() {
   return (
     <ScrollView style={[styles.scroll, { backgroundColor: theme.colors.base }]} contentContainerStyle={styles.content}>
       <View style={styles.wrapper}>
+        {/* Back button */}
         <Pressable style={styles.back} onPress={() => router.back()}>
           <Icon name="ArrowLeft" size={20} color={theme.colors.primary} />
           <Text style={[styles.backText, { color: theme.colors.primary, fontFamily: f }]}>Back</Text>
         </Pressable>
 
+        {/* Module Header */}
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={[styles.iconWrap, { backgroundColor: mod.color }]}>
@@ -77,27 +106,60 @@ export default function ModuleDetailScreen() {
             </View>
           </View>
           <Text style={[styles.desc, { color: theme.colors.textMuted, fontFamily: f }]}>{mod.description}</Text>
+
+          {/* Location-Aware Tips */}
+          {profile && (profile.locationState || profile.climateZone) && (
+            <LocationTip
+              locationState={profile.locationState}
+              climateZone={profile.climateZone}
+              seasonRelevance={modSteps.flatMap(s => s.seasonRelevance).filter((v, i, a) => a.indexOf(v) === i)}
+              tags={modSteps.flatMap(s => s.tags).filter((v, i, a) => a.indexOf(v) === i)}
+            />
+          )}
         </View>
 
+        {/* Progress + Cost Summary */}
         <View style={styles.summaryRow}>
+          {/* Progress card */}
           <Card variant="elevated" style={[styles.summaryCard, { backgroundColor: theme.colors.card }]}>
-            <View style={[styles.progressRingOuter, { borderColor: mod.color + '30' }]}>
-              <Text style={[styles.progressPct, { color: mod.color, fontFamily: fd }]}>{progressPct}%</Text>
+            <View style={styles.progressCircle}>
+              <View style={[styles.progressRingOuter, { borderColor: mod.color + '30' }]}>
+                <Text style={[styles.progressPct, { color: mod.color, fontFamily: fd }]}>{progressPct}%</Text>
+              </View>
             </View>
-            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted, fontFamily: f }]}>{stats.completed}/{stats.total} done</Text>
-            {stats.inProg > 0 && <Text style={[styles.summaryMini, { color: theme.colors.primary }]}>{stats.inProg} active</Text>}
+            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted, fontFamily: f }]}>
+              {stats.completed}/{stats.total} done
+            </Text>
+            {stats.inProg > 0 && (
+              <Text style={[styles.summaryMini, { color: theme.colors.primary }]}>
+                {stats.inProg} active
+              </Text>
+            )}
           </Card>
+
+          {/* Cost card */}
           <Card variant="elevated" style={[styles.summaryCard, { backgroundColor: theme.colors.card }]}>
             <Icon name="DollarSign" size={24} color={theme.colors.warning} />
-            <Text style={[styles.costActual, { color: theme.colors.text, fontFamily: fd }]}>${costStats.actual.toLocaleString()}</Text>
-            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted, fontFamily: f }]}>spent so far</Text>
-            <Text style={[styles.summaryMini, { color: theme.colors.textMuted }]}>Est. ${costStats.estLow.toLocaleString()} - ${costStats.estHigh.toLocaleString()}</Text>
+            <Text style={[styles.costActual, { color: theme.colors.text, fontFamily: fd }]}>
+              ${costStats.actual.toLocaleString()}
+            </Text>
+            <Text style={[styles.summaryLabel, { color: theme.colors.textMuted, fontFamily: f }]}>
+              spent so far
+            </Text>
+            <Text style={[styles.summaryMini, { color: theme.colors.textMuted }]}>
+              Est. ${costStats.estLow.toLocaleString()} - ${costStats.estHigh.toLocaleString()}
+            </Text>
           </Card>
         </View>
 
+        {/* Checklist */}
         <View style={styles.checklistHeader}>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: fd }]}>Checklist</Text>
-          <Text style={[styles.checklistSub, { color: theme.colors.primaryMuted, fontFamily: fa }]}>Tap circles to toggle, expand for details</Text>
+          <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: fd }]}>
+            Checklist
+          </Text>
+          <Text style={[styles.checklistSub, { color: theme.colors.primaryMuted, fontFamily: fa }]}>
+            Tap circles to toggle, expand for details
+          </Text>
         </View>
 
         <View style={styles.stepsList}>
@@ -113,12 +175,36 @@ export default function ModuleDetailScreen() {
                 locked={locked}
                 isLast={idx === modSteps.length - 1}
                 actualCost={progress[s.id]?.actualCost}
-                onToggleStatus={(newStatus) => { if (!locked) updateStatus(s.id, newStatus); }}
-                onPress={() => { if (!locked) router.push(`/modules/${slug}/steps/${s.id}`); }}
+                onToggleStatus={(newStatus) => {
+                  if (!locked) updateStatus(s.id, newStatus);
+                }}
+                onPress={() => {
+                  if (!locked) {
+                    router.push(`/modules/${slug}/steps/${s.id}`);
+                  }
+                }}
               />
             );
           })}
         </View>
+
+        {/* Module Photos */}
+        {(modulePhotos.length > 0 || modSteps.length > 0) && (
+          <View style={{ marginTop: 24 }}>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: fd }]}>
+              Photos & Documents
+            </Text>
+            <PhotoGallery
+              photos={modulePhotos.map(p => p.uri)}
+              onAddPhoto={(uri) => addPhoto(defaultStepId, uri)}
+              onRemovePhoto={(uri) => {
+                // Find which step owns this photo and remove from that step
+                const owner = modulePhotos.find(p => p.uri === uri);
+                if (owner) removePhoto(owner.stepId, uri);
+              }}
+            />
+          </View>
+        )}
       </View>
     </ScrollView>
   );
@@ -140,6 +226,7 @@ const styles = StyleSheet.create({
   desc: { fontSize: 16, lineHeight: 24 },
   summaryRow: { flexDirection: 'row', gap: 12, marginBottom: 28 },
   summaryCard: { flex: 1, alignItems: 'center', padding: 16, gap: 6 },
+  progressCircle: { marginBottom: 4 },
   progressRingOuter: { width: 56, height: 56, borderRadius: 28, borderWidth: 4, justifyContent: 'center', alignItems: 'center' },
   progressPct: { fontSize: 18, fontWeight: '700' },
   costActual: { fontSize: 22, fontWeight: '700' },

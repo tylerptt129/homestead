@@ -11,6 +11,8 @@ interface ProgressState {
   updateStepStatus: (stepId: string, status: StepStatus) => void;
   updateStepNotes: (stepId: string, notes: string) => void;
   updateStepCost: (stepId: string, cost: number) => void;
+  addStepPhoto: (stepId: string, photoUri: string) => void;
+  removeStepPhoto: (stepId: string, photoUri: string) => void;
   getProgressForStep: (stepId: string) => UserStepProgress | undefined;
   getProgressForModule: (
     moduleId: string,
@@ -110,6 +112,32 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
         updatedAt: new Date().toISOString(),
       };
 
+      const newProgress = { ...state.progress, [stepId]: updated };
+      persistProgress(newProgress);
+      return { progress: newProgress };
+    }),
+
+  addStepPhoto: (stepId: string, photoUri: string) =>
+    set((state) => {
+      const existing = state.progress[stepId] || createDefaultProgress(stepId);
+      const updated: UserStepProgress = {
+        ...existing,
+        photos: [...existing.photos, photoUri],
+        updatedAt: new Date().toISOString(),
+      };
+      const newProgress = { ...state.progress, [stepId]: updated };
+      persistProgress(newProgress);
+      return { progress: newProgress };
+    }),
+
+  removeStepPhoto: (stepId: string, photoUri: string) =>
+    set((state) => {
+      const existing = state.progress[stepId] || createDefaultProgress(stepId);
+      const updated: UserStepProgress = {
+        ...existing,
+        photos: existing.photos.filter(p => p !== photoUri),
+        updatedAt: new Date().toISOString(),
+      };
       const newProgress = { ...state.progress, [stepId]: updated };
       persistProgress(newProgress);
       return { progress: newProgress };

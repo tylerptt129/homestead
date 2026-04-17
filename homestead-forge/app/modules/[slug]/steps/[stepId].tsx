@@ -9,6 +9,9 @@ import Badge from '../../../../components/atoms/Badge';
 import Card from '../../../../components/atoms/Card';
 import Icon from '../../../../components/atoms/Icon';
 import Divider from '../../../../components/atoms/Divider';
+import PhotoGallery from '../../../../components/molecules/PhotoGallery';
+import LocationTip from '../../../../components/molecules/LocationTip';
+import { useAuthStore } from '../../../../stores/useAuthStore';
 import type { StepStatus } from '../../../../types';
 
 export default function StepDetailScreen() {
@@ -21,6 +24,9 @@ export default function StepDetailScreen() {
   const updateStatus = useProgressStore(s => s.updateStepStatus);
   const updateNotes = useProgressStore(s => s.updateStepNotes);
   const updateCost = useProgressStore(s => s.updateStepCost);
+  const addPhoto = useProgressStore(s => s.addStepPhoto);
+  const removePhoto = useProgressStore(s => s.removeStepPhoto);
+  const profile = useAuthStore(s => s.profile);
 
   const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
   const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
@@ -39,114 +45,238 @@ export default function StepDetailScreen() {
 
   const saveNotes = useCallback((text: string) => {
     setNotes(text);
-    if (stepId) { updateNotes(stepId, text); setSaveIndicator('Saved'); setTimeout(() => setSaveIndicator(''), 2000); }
+    if (stepId) {
+      updateNotes(stepId, text);
+      setSaveIndicator('Saved');
+      setTimeout(() => setSaveIndicator(''), 2000);
+    }
   }, [stepId, updateNotes]);
 
   const saveCost = useCallback((text: string) => {
     setCostInput(text);
     const num = parseFloat(text);
-    if (stepId && !isNaN(num)) updateCost(stepId, num);
+    if (stepId && !isNaN(num)) {
+      updateCost(stepId, num);
+    }
   }, [stepId, updateCost]);
 
-  const changeStatus = (newStatus: StepStatus) => { if (stepId) updateStatus(stepId, newStatus); };
-  const goToStep = (direction: 'prev' | 'next') => {
-    const idx = direction === 'prev' ? stepIndex - 1 : stepIndex + 1;
-    if (idx >= 0 && idx < allSteps.length) router.replace(`/modules/${slug}/steps/${allSteps[idx].id}`);
+  const changeStatus = (newStatus: StepStatus) => {
+    if (stepId) updateStatus(stepId, newStatus);
   };
 
-  if (!step) return (<View style={[styles.center, { backgroundColor: theme.colors.base }]}><Text style={{ color: theme.colors.text }}>Step not found</Text></View>);
+  // Navigate to next/prev step
+  const goToStep = (direction: 'prev' | 'next') => {
+    const idx = direction === 'prev' ? stepIndex - 1 : stepIndex + 1;
+    if (idx >= 0 && idx < allSteps.length) {
+      router.replace(`/modules/${slug}/steps/${allSteps[idx].id}`);
+    }
+  };
 
-  const statusLabel = status === 'completed' ? 'Completed' : status === 'in_progress' ? 'In Progress' : status === 'skipped' ? 'Skipped' : 'Not Started';
+  if (!step) {
+    return (
+      <View style={[styles.center, { backgroundColor: theme.colors.base }]}>
+        <Text style={{ color: theme.colors.text }}>Step not found</Text>
+      </View>
+    );
+  }
+
   const statusColor = status === 'completed' ? theme.colors.accent : status === 'in_progress' ? theme.colors.primary : theme.colors.textMuted;
-  const costStr = step.estimatedCostLow === 0 && step.estimatedCostHigh === 0 ? 'Free' : `$${step.estimatedCostLow.toLocaleString()} - $${step.estimatedCostHigh.toLocaleString()}`;
+  const statusLabel = status === 'completed' ? 'Completed' : status === 'in_progress' ? 'In Progress' : status === 'skipped' ? 'Skipped' : 'Not Started';
+  const costStr = step.estimatedCostLow === 0 && step.estimatedCostHigh === 0
+    ? 'Free'
+    : `$${step.estimatedCostLow.toLocaleString()} - $${step.estimatedCostHigh.toLocaleString()}`;
 
   return (
     <ScrollView style={[styles.scroll, { backgroundColor: theme.colors.base }]} contentContainerStyle={styles.content}>
       <View style={styles.wrapper}>
+        {/* Navigation bar */}
         <View style={styles.navBar}>
           <Pressable style={styles.navBtn} onPress={() => router.back()}>
             <Icon name="ArrowLeft" size={18} color={theme.colors.primary} />
-            <Text style={[styles.navText, { color: theme.colors.primary, fontFamily: f }]}>{mod?.title || 'Back'}</Text>
+            <Text style={[styles.navText, { color: theme.colors.primary, fontFamily: f }]}>
+              {mod?.title || 'Back'}
+            </Text>
           </Pressable>
-          <Text style={[styles.stepCounter, { color: theme.colors.textMuted, fontFamily: f }]}>Step {stepIndex + 1} of {allSteps.length}</Text>
+          <Text style={[styles.stepCounter, { color: theme.colors.textMuted, fontFamily: f }]}>
+            Step {stepIndex + 1} of {allSteps.length}
+          </Text>
         </View>
 
+        {/* Title + Status */}
         <View style={styles.header}>
           <Text style={[styles.title, { color: theme.colors.text, fontFamily: fd }]}>{step.title}</Text>
           <View style={styles.metaRow}>
             <Badge label={statusLabel} variant={status === 'completed' ? 'success' : status === 'in_progress' ? 'warning' : 'default'} />
-            <View style={styles.metaItem}><Icon name="Clock" size={14} color={theme.colors.textMuted} /><Text style={[styles.metaText, { color: theme.colors.textMuted, fontFamily: f }]}>{step.estimatedTime}</Text></View>
-            <View style={styles.metaItem}><Icon name="DollarSign" size={14} color={theme.colors.textMuted} /><Text style={[styles.metaText, { color: theme.colors.textMuted, fontFamily: f }]}>{costStr}</Text></View>
+            <View style={styles.metaItem}>
+              <Icon name="Clock" size={14} color={theme.colors.textMuted} />
+              <Text style={[styles.metaText, { color: theme.colors.textMuted, fontFamily: f }]}>{step.estimatedTime}</Text>
+            </View>
+            <View style={styles.metaItem}>
+              <Icon name="DollarSign" size={14} color={theme.colors.textMuted} />
+              <Text style={[styles.metaText, { color: theme.colors.textMuted, fontFamily: f }]}>{costStr}</Text>
+            </View>
           </View>
         </View>
 
+        {/* Quick Status Action */}
         <View style={[styles.statusBar, { backgroundColor: statusColor + '12', borderColor: statusColor + '30' }]}>
-          {status === 'not_started' && <Button title="Start This Task" variant="primary" size="lg" icon="Play" onPress={() => changeStatus('in_progress')} />}
+          {status === 'not_started' && (
+            <Button title="Start This Task" variant="primary" size="lg" icon="Play" onPress={() => changeStatus('in_progress')} />
+          )}
           {status === 'in_progress' && (
             <View style={styles.statusActions}>
-              <View style={{ flex: 1 }}><Button title="Mark Complete" variant="primary" size="lg" icon="Check" onPress={() => changeStatus('completed')} /></View>
+              <View style={{ flex: 1 }}>
+                <Button title="Mark Complete" variant="primary" size="lg" icon="Check" onPress={() => changeStatus('completed')} />
+              </View>
               <Button title="Skip" variant="ghost" size="sm" onPress={() => changeStatus('skipped')} />
             </View>
           )}
           {status === 'completed' && (
             <View style={styles.completedRow}>
               <Icon name="Check" size={22} color={theme.colors.accent} />
-              <Text style={[styles.completedText, { color: theme.colors.accent, fontFamily: f }]}>Task completed!</Text>
-              <Pressable onPress={() => changeStatus('in_progress')}><Text style={[styles.undoText, { color: theme.colors.textMuted, fontFamily: f }]}>Undo</Text></Pressable>
+              <Text style={[styles.completedText, { color: theme.colors.accent, fontFamily: f }]}>
+                Task completed!
+              </Text>
+              <Pressable onPress={() => changeStatus('in_progress')}>
+                <Text style={[styles.undoText, { color: theme.colors.textMuted, fontFamily: f }]}>Undo</Text>
+              </Pressable>
             </View>
           )}
-          {status === 'skipped' && <Button title="Start This Task" variant="outline" icon="Play" onPress={() => changeStatus('in_progress')} />}
+          {status === 'skipped' && (
+            <Button title="Start This Task" variant="outline" icon="Play" onPress={() => changeStatus('in_progress')} />
+          )}
         </View>
 
+        {/* Description */}
         <Text style={[styles.desc, { color: theme.colors.text, fontFamily: f }]}>{step.description}</Text>
+
+        {/* Tags & Seasons */}
         {(step.seasonRelevance.length > 0 || step.tags.length > 0) && (
           <View style={styles.tagRow}>
-            {step.seasonRelevance.map(s => <Badge key={s} label={s} variant="info" size="sm" />)}
-            {step.tags.map(t => <Badge key={t} label={t} variant="default" size="sm" />)}
+            {step.seasonRelevance.map(s => (
+              <Badge key={s} label={s} variant="info" size="sm" />
+            ))}
+            {step.tags.map(t => (
+              <Badge key={t} label={t} variant="default" size="sm" />
+            ))}
           </View>
         )}
+
+        {/* Location-Aware Tips */}
+        {profile && (profile.locationState || profile.climateZone) && (
+          <LocationTip
+            locationState={profile.locationState}
+            climateZone={profile.climateZone}
+            seasonRelevance={step.seasonRelevance}
+            tags={step.tags}
+          />
+        )}
+
         <Divider />
 
+        {/* Detailed Guide */}
         <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: fd }]}>How-To Guide</Text>
         <Card variant="default" style={{ backgroundColor: theme.colors.surface, marginBottom: 20 }}>
-          <Text style={[styles.guide, { color: theme.colors.text, fontFamily: f }]}>{step.detailedGuide}</Text>
+          <Text style={[styles.guide, { color: theme.colors.text, fontFamily: f }]}>
+            {step.detailedGuide}
+          </Text>
         </Card>
 
-        {step.tips.length > 0 && (<>
-          <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: fd }]}>Pro Tips</Text>
-          {step.tips.map((tip, i) => (
-            <Card key={i} variant="default" style={{ backgroundColor: theme.colors.surfaceAlt, marginBottom: 10 }}>
-              <View style={styles.tipRow}><Icon name="Lightbulb" size={18} color={theme.colors.warning} /><Text style={[styles.tipText, { color: theme.colors.text, fontFamily: fa, fontSize: 17 }]}>{tip}</Text></View>
-            </Card>
-          ))}
-        </>)}
+        {/* Tips */}
+        {step.tips.length > 0 && (
+          <>
+            <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: fd }]}>Pro Tips</Text>
+            {step.tips.map((tip, i) => (
+              <Card key={i} variant="default" style={{ backgroundColor: theme.colors.surfaceAlt, marginBottom: 10 }}>
+                <View style={styles.tipRow}>
+                  <Icon name="Lightbulb" size={18} color={theme.colors.warning} />
+                  <Text style={[styles.tipText, { color: theme.colors.text, fontFamily: fa, fontSize: 17 }]}>{tip}</Text>
+                </View>
+              </Card>
+            ))}
+          </>
+        )}
+
         <Divider />
 
+        {/* Your Notes + Cost — side by side on wider screens */}
         <View style={styles.trackingSection}>
           <View style={styles.trackingCol}>
             <View style={styles.notesHeader}>
               <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: fd }]}>Your Notes</Text>
-              {saveIndicator ? <View style={styles.savedRow}><Icon name="Check" size={12} color={theme.colors.accent} /><Text style={[styles.saved, { color: theme.colors.accent }]}>{saveIndicator}</Text></View> : null}
+              {saveIndicator ? (
+                <View style={styles.savedRow}>
+                  <Icon name="Check" size={12} color={theme.colors.accent} />
+                  <Text style={[styles.saved, { color: theme.colors.accent }]}>{saveIndicator}</Text>
+                </View>
+              ) : null}
             </View>
-            <TextInput style={[styles.notesInput, { backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border, fontFamily: f }]} value={notes} onChangeText={saveNotes} placeholder="Notes, observations, lessons learned..." placeholderTextColor={theme.colors.textMuted} multiline numberOfLines={4} />
+            <TextInput
+              style={[styles.notesInput, {
+                backgroundColor: theme.colors.surface,
+                color: theme.colors.text,
+                borderColor: theme.colors.border,
+                fontFamily: f,
+              }]}
+              value={notes}
+              onChangeText={saveNotes}
+              placeholder="Notes, observations, lessons learned..."
+              placeholderTextColor={theme.colors.textMuted}
+              multiline
+              numberOfLines={4}
+            />
           </View>
+
           <View style={styles.costCol}>
             <Text style={[styles.sectionTitle, { color: theme.colors.text, fontFamily: fd }]}>Actual Cost</Text>
             <View style={styles.costRow}>
               <Text style={[styles.dollar, { color: theme.colors.textMuted }]}>$</Text>
-              <TextInput style={[styles.costInput, { backgroundColor: theme.colors.surface, color: theme.colors.text, borderColor: theme.colors.border, fontFamily: f }]} value={costInput} onChangeText={saveCost} placeholder="0" placeholderTextColor={theme.colors.textMuted} keyboardType="numeric" />
+              <TextInput
+                style={[styles.costInput, {
+                  backgroundColor: theme.colors.surface,
+                  color: theme.colors.text,
+                  borderColor: theme.colors.border,
+                  fontFamily: f,
+                }]}
+                value={costInput}
+                onChangeText={saveCost}
+                placeholder="0"
+                placeholderTextColor={theme.colors.textMuted}
+                keyboardType="numeric"
+              />
             </View>
-            <Text style={[styles.costEst, { color: theme.colors.textMuted, fontFamily: f }]}>Estimated: {costStr}</Text>
+            <Text style={[styles.costEst, { color: theme.colors.textMuted, fontFamily: f }]}>
+              Estimated: {costStr}
+            </Text>
           </View>
         </View>
+
+        {/* Photos & Documents */}
+        <PhotoGallery
+          photos={stepProgress?.photos || []}
+          onAddPhoto={(uri) => stepId && addPhoto(stepId, uri)}
+          onRemovePhoto={(uri) => stepId && removePhoto(stepId, uri)}
+        />
+
         <Divider />
 
+        {/* Prev/Next navigation */}
         <View style={styles.stepNav}>
-          <Pressable style={[styles.stepNavBtn, { opacity: stepIndex > 0 ? 1 : 0.3 }]} onPress={() => stepIndex > 0 && goToStep('prev')} disabled={stepIndex <= 0}>
-            <Icon name="ChevronLeft" size={18} color={theme.colors.primary} /><Text style={[styles.stepNavText, { color: theme.colors.primary, fontFamily: f }]}>Previous</Text>
+          <Pressable
+            style={[styles.stepNavBtn, { opacity: stepIndex > 0 ? 1 : 0.3 }]}
+            onPress={() => stepIndex > 0 && goToStep('prev')}
+            disabled={stepIndex <= 0}
+          >
+            <Icon name="ChevronLeft" size={18} color={theme.colors.primary} />
+            <Text style={[styles.stepNavText, { color: theme.colors.primary, fontFamily: f }]}>Previous</Text>
           </Pressable>
-          <Pressable style={[styles.stepNavBtn, { opacity: stepIndex < allSteps.length - 1 ? 1 : 0.3 }]} onPress={() => stepIndex < allSteps.length - 1 && goToStep('next')} disabled={stepIndex >= allSteps.length - 1}>
-            <Text style={[styles.stepNavText, { color: theme.colors.primary, fontFamily: f }]}>Next</Text><Icon name="ChevronRight" size={18} color={theme.colors.primary} />
+          <Pressable
+            style={[styles.stepNavBtn, { opacity: stepIndex < allSteps.length - 1 ? 1 : 0.3 }]}
+            onPress={() => stepIndex < allSteps.length - 1 && goToStep('next')}
+            disabled={stepIndex >= allSteps.length - 1}
+          >
+            <Text style={[styles.stepNavText, { color: theme.colors.primary, fontFamily: f }]}>Next</Text>
+            <Icon name="ChevronRight" size={18} color={theme.colors.primary} />
           </Pressable>
         </View>
       </View>
@@ -155,7 +285,8 @@ export default function StepDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  scroll: { flex: 1 }, content: { paddingBottom: 60 },
+  scroll: { flex: 1 },
+  content: { paddingBottom: 60 },
   wrapper: { maxWidth: 800, width: '100%', alignSelf: 'center', padding: 20 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   navBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, marginTop: 8 },
