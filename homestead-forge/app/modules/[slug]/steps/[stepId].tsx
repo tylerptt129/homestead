@@ -22,8 +22,8 @@ export default function StepDetailScreen() {
   const updateNotes = useProgressStore(s => s.updateStepNotes);
   const updateCost = useProgressStore(s => s.updateStepCost);
 
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
-  const f = Platform.select({ web: '"Source Sans 3", sans-serif', default: undefined });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
+  const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
   const fa = Platform.select({ web: '"Caveat", cursive', default: undefined });
 
   const mod = useMemo(() => modules.find(m => m.slug === slug), [modules, slug]);

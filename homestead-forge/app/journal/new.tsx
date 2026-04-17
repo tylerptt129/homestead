@@ -28,8 +28,8 @@ export default function NewJournalEntry() {
   const addEntry = useJournalStore(s => s.addEntry);
   const modules = useModuleStore(s => s.modules);
 
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
-  const f = Platform.select({ web: '"Source Sans 3", sans-serif', default: undefined });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
+  const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');

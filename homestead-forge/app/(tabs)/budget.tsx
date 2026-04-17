@@ -16,8 +16,8 @@ export default function BudgetScreen() {
   const router = useRouter();
   const items = useBudgetStore(s => s.items);
 
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
-  const f = Platform.select({ web: '"Source Sans 3", sans-serif', default: undefined });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
+  const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
 
   const totalSpent = useMemo(() => items.reduce((s, i) => s + i.amount, 0), [items]);
 

@@ -25,21 +25,21 @@ interface TextProps extends RNTextProps {
 }
 
 const webFonts: Record<TextVariant, string> = {
-  display: '"Playfair Display", Georgia, serif',
-  heading: '"Playfair Display", Georgia, serif',
-  subheading: '"Source Sans 3", "Source Sans Pro", system-ui, sans-serif',
-  body: '"Source Sans 3", "Source Sans Pro", system-ui, sans-serif',
-  caption: '"Source Sans 3", "Source Sans Pro", system-ui, sans-serif',
+  display: '"Bitter", Georgia, serif',
+  heading: '"Bitter", Georgia, serif',
+  subheading: '"Inter", "Inter", system-ui, sans-serif',
+  body: '"Inter", "Inter", system-ui, sans-serif',
+  caption: '"Inter", "Inter", system-ui, sans-serif',
   mono: '"JetBrains Mono", "Fira Code", monospace',
   accent: '"Caveat", cursive',
 };
 
 const nativeFonts: Record<TextVariant, string> = {
-  display: 'Playfair Display',
-  heading: 'Playfair Display',
-  subheading: 'Source Sans 3',
-  body: 'Source Sans 3',
-  caption: 'Source Sans 3',
+  display: 'Bitter',
+  heading: 'Bitter',
+  subheading: 'Inter',
+  body: 'Inter',
+  caption: 'Inter',
   mono: 'JetBrains Mono',
   accent: 'Caveat',
 };

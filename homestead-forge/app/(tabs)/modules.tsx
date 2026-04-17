@@ -15,7 +15,7 @@ export default function ModulesScreen() {
   const progress = useProgressStore(s => s.progress);
   const [search, setSearch] = useState('');
 
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
 
   const filteredModules = useMemo(() => {
     if (!search.trim()) return modules;

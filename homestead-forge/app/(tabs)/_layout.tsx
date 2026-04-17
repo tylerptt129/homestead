@@ -21,7 +21,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textMuted,
         tabBarLabelStyle: {
-          fontFamily: Platform.select({ web: '"Source Sans 3", sans-serif', default: undefined }),
+          fontFamily: Platform.select({ web: '"Inter", sans-serif', default: undefined }),
           fontSize: 12,
           marginTop: 2,
         },

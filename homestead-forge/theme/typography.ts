@@ -1,6 +1,6 @@
 export const fonts = {
-  display: 'Playfair Display',
-  body: 'Source Sans 3',
+  display: 'Bitter',
+  body: 'Inter',
   mono: 'JetBrains Mono',
   accent: 'Caveat',
 };

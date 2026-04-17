@@ -12,8 +12,8 @@ export default function ProfileScreen() {
   const { theme, mode, toggleTheme } = useTheme();
   const profile = useAuthStore(s => s.profile);
   const updateProfile = useAuthStore(s => s.updateProfile);
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
-  const f = Platform.select({ web: '"Source Sans 3", sans-serif', default: undefined });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
+  const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
 
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(profile?.homesteadName || '');

@@ -26,8 +26,8 @@ export default function OnboardingScreen() {
   const [acreage, setAcreage] = useState('');
   const [gridStatus, setGridStatus] = useState<GridStatus>('on_grid');
 
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
-  const f = Platform.select({ web: '"Source Sans 3", sans-serif', default: undefined });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
+  const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
   const fa = Platform.select({ web: '"Caveat", cursive', default: undefined });
 
   const finish = () => {

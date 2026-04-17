@@ -18,8 +18,8 @@ export default function ModuleDetailScreen() {
   const steps = useModuleStore(s => s.steps);
   const progress = useProgressStore(s => s.progress);
 
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
-  const f = Platform.select({ web: '"Source Sans 3", sans-serif', default: undefined });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
+  const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
 
   const mod = useMemo(() => modules.find(m => m.slug === slug), [modules, slug]);
   const modSteps = useMemo(() => steps[slug || ''] || [], [steps, slug]);

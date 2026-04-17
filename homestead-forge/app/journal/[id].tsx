@@ -18,8 +18,8 @@ export default function JournalDetailScreen() {
   const entries = useJournalStore(s => s.entries);
   const deleteEntry = useJournalStore(s => s.deleteEntry);
 
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
-  const f = Platform.select({ web: '"Source Sans 3", sans-serif', default: undefined });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
+  const f = Platform.select({ web: '"Inter", sans-serif', default: undefined });
 
   const entry = useMemo(() => entries.find(e => e.id === id), [entries, id]);
 

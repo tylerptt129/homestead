@@ -55,7 +55,7 @@ export default function Input({
             backgroundColor: theme.colors.surface,
             borderColor,
             color: theme.colors.text,
-            fontFamily: '"Source Sans 3", "Source Sans Pro", system-ui, sans-serif',
+            fontFamily: '"Inter", "Inter", system-ui, sans-serif',
             fontSize: theme.fontSizes.md,
           },
           multiline && {

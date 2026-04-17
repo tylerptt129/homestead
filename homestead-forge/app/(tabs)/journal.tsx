@@ -12,7 +12,7 @@ export default function JournalScreen() {
   const router = useRouter();
   const entries = useJournalStore(s => s.entries);
 
-  const fd = Platform.select({ web: '"Playfair Display", serif', default: 'serif' });
+  const fd = Platform.select({ web: '"Bitter", serif', default: 'serif' });
 
   const sorted = useMemo(() => {
     return [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));

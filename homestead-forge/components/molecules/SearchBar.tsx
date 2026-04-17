@@ -34,7 +34,7 @@ export default function SearchBar({
           styles.input,
           {
             color: theme.colors.text,
-            fontFamily: '"Source Sans 3", "Source Sans Pro", system-ui, sans-serif',
+            fontFamily: '"Inter", "Inter", system-ui, sans-serif',
             fontSize: 16,
           },
         ]}
